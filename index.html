@@ -618,7 +618,7 @@
                 return;
             }
             const submittedAt = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
-            const pdfFilename = `${todayDate}_${customerPlate}.pdf`;
+            const pdfFilename = `${todayDate}_${customerPlate}_${Date.now()}.pdf`;
             const pdfBin = atob(contractPdfBase64);
             const pdfBytes = new Uint8Array(pdfBin.length);
             for (let i = 0; i < pdfBin.length; i++) pdfBytes[i] = pdfBin.charCodeAt(i);
