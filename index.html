@@ -662,18 +662,6 @@
                     })
                 });
                 if (!response.ok) throw new Error('Webhook Error');
-                const inClient = liff.isInClient();
-                alert('isInClient: ' + inClient + ' | pdfUrl: ' + (pdfUrl ? pdfUrl.slice(-20) : 'null'));
-                if (inClient) {
-                    try {
-                        const userName = document.getElementById('lineUserName').value;
-                        await liff.sendMessages([
-                            buildConfirmFlexMessage(customerPlate, loanerPlate, storeName, todayDate, userName, pdfUrl)
-                        ]);
-                    } catch (msgErr) {
-                        alert('sendMessages錯誤: ' + (msgErr && msgErr.message ? msgErr.message : JSON.stringify(msgErr)));
-                    }
-                }
                 document.getElementById('form-container').classList.add('hidden');
                 document.getElementById('success-container').classList.remove('hidden');
             } catch (error) {
