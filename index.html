@@ -631,7 +631,8 @@
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                            'Content-Type': 'application/pdf'
+                            'Content-Type': 'application/pdf',
+                            'x-upsert': 'true'
                         },
                         body: pdfBlob
                     }
