@@ -668,7 +668,7 @@
                             buildConfirmFlexMessage(customerPlate, loanerPlate, storeName, todayDate, userName, pdfUrl)
                         ]);
                     } catch (msgErr) {
-                        console.warn('sendMessages 失敗', msgErr);
+                        alert('sendMessages錯誤: ' + (msgErr && msgErr.message ? msgErr.message : JSON.stringify(msgErr)));
                     }
                 }
                 document.getElementById('form-container').classList.add('hidden');
