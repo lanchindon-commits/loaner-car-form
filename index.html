@@ -234,6 +234,8 @@
                     <input type="number" id="loanerMileage" name="loanerMileage" required min="0"
                         placeholder="例如: 12345"
                         class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                
+                    <div id="mileage-error" class="text-xs text-red-500 mt-1 hidden">請輸入代步車公里數</div>
                 </div>
                 <!-- 4. 店家選擇（Banner 按鈕） -->
                 <div>
@@ -588,6 +590,12 @@
             if (!storeName) {
                 document.getElementById('store-error').classList.remove('hidden');
                 document.querySelector('.store-btn').scrollIntoView({ behavior: 'smooth' });
+                return;
+            }
+            const mileageVal = document.getElementById('loanerMileage').value.trim();
+            if (!mileageVal) {
+                document.getElementById('mileage-error').classList.remove('hidden');
+                document.getElementById('loanerMileage').scrollIntoView({ behavior: 'smooth' });
                 return;
             }
             if (!photoBase64) {
