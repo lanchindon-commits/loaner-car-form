@@ -329,7 +329,26 @@
                 </button>
             </form>
         </div>
-        <!-- 成功回饋畫面 -->
+                <!-- 綁定畫面 -->
+        <div id="binding-container" class="form-card p-8 hidden">
+            <div class="text-center mb-6">
+                <div class="text-4xl mb-3">🔗</div>
+                <h2 class="text-xl font-bold text-gray-800">LINE 綁定</h2>
+                <p class="text-sm text-gray-500 mt-2">請輸入您的車牌號碼以完成綁定</p>
+            </div>
+            <div id="binding-name" class="text-center text-blue-600 font-medium mb-4"></div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">您的車牌號碼</label>
+                <input type="text" id="bindingCarNo" placeholder="例如: NJS-5520"
+                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-center font-bold text-lg tracking-widest uppercase">
+                <div id="binding-error" class="text-xs text-red-500 mt-1 hidden"></div>
+            </div>
+            <button id="bindingBtn" onclick="doBinding()"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200">
+                確認綁定
+            </button>
+        </div>
+<!-- 成功回饋畫面 -->
         <div id="success-container" class="form-card p-8 text-center hidden">
             <div class="mb-4 flex justify-center">
                 <div class="bg-green-100 p-3 rounded-full">
@@ -385,7 +404,7 @@
                     const profile = await liff.getProfile();
                     document.getElementById('lineUserId').value = profile.userId;
                     document.getElementById('lineUserName').value = profile.displayName;
-                    setupForm();
+                    await checkAndSetupLiff(profile.userId, profile.displayName);
                 } else {
                     liff.login();
                 }
@@ -788,6 +807,67 @@
                 if (!select) return;
                 select.querySelectorAll('option').forEach(opt => { if (opt.value && lentPlates.includes(opt.value)) { opt.disabled = true; opt.style.color = '#9ca3af'; opt.text = opt.value + '（出借中）'; } });
             } catch(e) { console.error('車輛狀態查詢失敗', e); }
+        }
+        async function checkAndSetupLiff(userId, displayName) {
+            try {
+                const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/liff_check_binding', {
+                    method: 'POST',
+                    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ p_line_user_id: userId })
+                });
+                const result = await resp.json();
+                if (result.bound) {
+                    setupForm();
+                } else {
+                    showBindingScreen(userId, displayName);
+                }
+            } catch(e) {
+                setupForm();
+            }
+        }
+        function showBindingScreen(userId, displayName) {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('binding-container').classList.remove('hidden');
+            document.getElementById('binding-name').textContent = '👋 ' + displayName + '，歡迎！';
+            window._bindUserId = userId;
+            window._bindDisplayName = displayName;
+        }
+        async function doBinding() {
+            const carNo = document.getElementById('bindingCarNo').value.trim().toUpperCase();
+            const errEl = document.getElementById('binding-error');
+            if (!carNo) { errEl.textContent = '請輸入車牌號碼'; errEl.classList.remove('hidden'); return; }
+            const btn = document.getElementById('bindingBtn');
+            btn.disabled = true;
+            btn.textContent = '綁定中...';
+            errEl.classList.add('hidden');
+            try {
+                const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/liff_bind_user', {
+                    method: 'POST',
+                    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ p_line_user_id: window._bindUserId, p_display_name: window._bindDisplayName, p_car_no: carNo })
+                });
+                const result = await resp.json();
+                if (result.ok) {
+                    document.getElementById('binding-container').classList.add('hidden');
+                    setupForm();
+                } else if (result.reason === 'not_found') {
+                    errEl.textContent = '查無此車牌，請確認後再試';
+                    errEl.classList.remove('hidden');
+                    btn.disabled = false; btn.textContent = '確認綁定';
+                } else if (result.reason === 'already_bound_other') {
+                    errEl.textContent = '此車牌已綁定其他 LINE 帳號，請聯繫店家';
+                    errEl.classList.remove('hidden');
+                    btn.disabled = false; btn.textContent = '確認綁定';
+                } else {
+                    errEl.textContent = '綁定失敗，請稍後再試';
+                    errEl.classList.remove('hidden');
+                    btn.disabled = false; btn.textContent = '確認綁定';
+                }
+            } catch(e) {
+                errEl.textContent = '網路錯誤，請稍後再試';
+                errEl.classList.remove('hidden');
+                btn.disabled = false; btn.textContent = '確認綁定';
+            }
         }
         window.onload = initializeLiff;
     </script>
